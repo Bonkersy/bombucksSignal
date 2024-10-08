@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+		<title>Bombs Signals</title>
+		
+		<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+		<script type="text/javascript" src="jquery.min.js"></script>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+			}
+
+			html {
+				font-size: 15px;     
+
+				-webkit-user-select: none; /* Safari */
+				-ms-user-select: none; /* IE 10 and IE 11 */
+				user-select: none; /* Standard syntax */ 
+
+				overflow: hidden;
+			}
+
+			body {
+				font-family: 'Tahoma', sans-serif;
+				cursor: default;
+				color: white;
+				background: #3b3865;
+
+				overflow: hidden;
+			}
+
+			.background {
+				content: " ";
+				left: 0;
+				top: 0;
+				width: 100%;
+				height: 100%;
+				position: fixed;
+				background: radial-gradient(#575757, #000000);
+				background-size: cover;
+				background-position: center center;
+				background-repeat: no-repeat;
+				overflow: hidden;
+				z-index: -1;
+			}
+				.background-strip {
+					width: 2px;
+					height: 2px;
+					border-radius: 10px;
+					background-color: rgba(255, 255, 255, 0.5);
+					box-shadow: 0px 0px 3px rgb(255, 255, 255);
+					position: absolute;
+					bottom: 0;
+					left: 0;
+
+					opacity: 0;
+
+					pointer-events: none;
+
+					will-change: transform;
+
+				    animation-name: background-strip-anim;
+				    animation-iteration-count: infinite;
+				    animation-direction: alternate-reverse;
+				}
+					   @keyframes background-strip-anim {
+							0% {
+								transform: translateY(0px);
+								opacity: 0;
+							}
+							50% {
+								opacity: 1;
+							}
+							100% { 
+								transform: translateY(-100vh);
+								opacity: 0;
+							}
+					   }
+
+				.winlogo {
+				    width: 101px;
+				    height: 37px;
+				    background-image: url(1win.png);
+				    background-repeat: no-repeat;
+				    background-position: center;
+				    background-size: contain;
+				    position: absolute;
+				    bottom: 32px;
+				    left: 9px;
+				    transform: rotate(30deg);
+				}
+
+			.screen {
+				padding: 30px;
+				text-align: center;
+				position: absolute;
+
+				top: 50%;
+				transform: translateY(-50%);
+
+				left: 0;
+				right: 0;
+				margin: 0 auto;
+
+				max-height: 100%;
+
+				max-width: 400px;
+
+				overflow-x: hidden;
+				overflow-y: auto;
+			}
+
+			.header {
+				position: absolute;
+				top: 20px;
+				left: 0;
+				right: 0;
+				margin: 0 auto;
+				text-align: center;
+				font-size: 30px;
+				font-weight: bold;
+
+				background: -webkit-linear-gradient(#e2ffe9, #92d581);
+			    -webkit-background-clip: text;
+			    -webkit-text-fill-color: transparent;
+			}
+
+			.button {
+			    display: block;
+			    padding: 12px 0px;
+			    background: #ffffff;
+			    color: black;
+			    border-radius: 14px;
+			    width: 60%;
+			    font-size: 20px;
+			    margin: 0 auto;
+			    box-shadow: 0px 0px 8px white;
+			}
+
+			.hash-image {
+				width: 100%;
+				height: 50px;
+				background-image: url(hash.jpg);
+				background-size: cover;
+				background-position: left center;
+				background-repeat: no-repeat;
+				border-radius: 10px;
+				margin-bottom: 15px;
+				box-shadow: 0px 0px 0px 2px rgba(255, 255, 255, 0.5);
+			}
+
+
+
+
+
+
+			.game-mode-block {
+			    display: grid;
+			    grid-template-columns: auto auto auto;
+			    gap: 10px;
+			    width: 80%;
+			    margin: 0 auto;
+			    transition: 0.4s;
+			}
+
+				.game-mode-left {
+				    display: inline-block;
+				    width: 0;
+				    height: 0;
+				    border-style: solid;
+				    border-width: 25px 30px 25px 0;
+				    border-color: transparent rgb(255, 255, 255) transparent transparent;
+				    filter: drop-shadow(0px 0px 4px #fff);
+				    margin: 0 auto;
+				}
+
+				.game-mode-right {
+				    display: inline-block;
+				    width: 0;
+				    height: 0;
+				    border-style: solid;
+				    border-width: 25px 0 25px 30px;
+				    border-color: transparent transparent transparent rgb(255, 255, 255);
+				    filter: drop-shadow(0px 0px 4px #fff);
+				    margin: 0 auto;
+				}
+
+				.game-mode-current {
+					font-size: 31px;
+					font-weight: bold;
+				}
+					.mode-desc {
+						font-size: 11px;
+					}
+
+
+
+				.game-screen {
+					height: calc(100vw - 60px);
+					box-shadow: 0px 0px 6px white;
+					border-radius: 20px;
+					margin-top: 30px;
+					margin-block: 30px;
+					background-color: rgba(40, 40, 40, 0.8);
+					overflow: hidden;
+					position: relative;
+				}
+
+
+				.loading-screen {
+					text-align: left;
+					line-height: 25px;
+					padding: 20px;
+					color: #54ff54;
+					font-family: "Lucida Console", "Courier New", monospace;
+					transform: rotate(180deg);
+					font-size: 12px;
+					font-weight: 100;
+					opacity: 0;
+					pointer-events: none;
+					background: black;
+					transition: 0.3s;
+					height: 100%;
+					width: 100%;
+					position: absolute;
+					left: 0;
+					top: 0;
+				}
+					.loading-row {
+						transform: rotate(180deg);
+						min-height: 20px;
+					}
+
+
+				.number {
+					font-size: 160px;
+					color: white;
+
+					font-weight: bold;
+
+					margin-top: 50%;
+					transform: translateY(-50%) scale(1.0);
+					opacity: 1.0;
+
+					background: -webkit-linear-gradient(#bbfbc9, #c881d5);
+				    -webkit-background-clip: text;
+				    -webkit-text-fill-color: transparent;
+
+				    text-shadow: 0px 0px 60px;
+
+				    transition: 0.3s;
+				}
+					.number-hidden {
+						opacity: 0.0;
+						transform: translateY(-50%) scale(0.3);
+					}
+
+				.frozen {
+					pointer-events: none;
+					opacity: 0.6;
+				}
+		</style>
+
+		<script type="text/javascript">
+
+			const sleep = m => new Promise(r => setTimeout(r, m));
+
+			function random(min, max) 
+			{
+			    let rand = min + Math.random() * (max + 1 - min);
+			    return Math.floor(rand);
+			}
+
+
+
+			function showLoading()
+			{
+
+				return new Promise(async resolve => {
+
+					$(".loading-screen").text("");
+					$(".loading-screen").css("opacity", "1.0");
+
+					await sleep(500);
+
+					let text = [
+						`C:\\Users\\Administrator>_ `,
+						`C:\\Users\\Administrator> dir`,
+						`Volume in drive C has no label.`,  
+						`Volume Serial Number is 1A2B-3C4D`,
+						` `,
+						`Directory of C:\\Users\\Administrator`,  
+						` `,
+						`12/10/2023  10:00 AM    DIR      .`,  
+						`12/10/2023  10:00 AM    DIR      ..`,  
+						`12/10/2023  09:59 AM    DIR      Documents`,  
+						`12/10/2023  09:47 AM    DIR      Downloads`,  
+						`12/10/2023  09:30 AM    DIR      Desktop`,  
+						`12/10/2023  10:02 AM                 secret_data.txt`,  
+						`12/10/2023  09:58 AM                 notes.txt`,  
+						` `,
+						`C:\\Users\\Administrator> type secret_data.txt `, 
+						`Access Granted: System Override in Progress...`,  
+						`Connection to server established. `, 
+						`Retrieving data...`,  
+						` `,
+						`[+] User: admin `, 
+						`[+] Password: 4d5f7c9a3e2d1fbc5aa1 (hashed)`,  
+						` `,
+						`[+] Target IP: 192.168.1.100`,  
+						`[+] Exploit: CVE-2023-XXXXX`,  
+						`[+] Status: Vulnerable`,  
+						` `,
+						`C:\\Users\\Administrator> ping 192.168.1.100`,  
+						`Pinging 192.168.1.100 with 32 bytes of data:`,  
+						`Reply from 192.168.1.100: bytes=32 time<1ms TTL=64`,  
+						`Reply from 192.168.1.100: bytes=32 time<1ms TTL=64`,  
+						`Reply from 192.168.1.100: bytes=32 time<1ms TTL=64`,  
+						`Reply from 192.168.1.100: bytes=32 time<1ms TTL=64`,  
+						` `,
+						`C:\\Users\\Administrator> nmap -sS 192.168.1.100`,  
+						`Starting Nmap 7.91 ( https://nmap.org ) at 2023-10-12 10:05 AM `, 
+						`Nmap scan report for 192.168.1.100`,  
+						`Host is up (0.0010s latency). `, 
+						`Not shown: 995 closed ports` , 
+						`PORT     STATE SERVICE  `,
+						`22/tcp open  ssh` , 
+						`80/tcp open  http` , 
+						`443/tcp open  https`  ,
+						` `,
+						`C:\\Users\\Administrator> ssh admin@192.168.1.100`  ,
+						`The authenticity of host '192.168.1.100' can't be established.`  ,
+						`ECDSA key fingerprint is SHA256:xxxxxx... ` ,
+						`Are you sure you want to continue connecting (yes/no)? yes` , 
+						`admin@192.168.1.100's password:`  ,
+						`Last login: Thu Oct 12 09:50:57 2023 from 192.168.1.1` , 
+						` `,
+						`Welcome to the server!`  ,
+						` `,
+						`C:\\Users\\Administrator> ls -la`  ,
+						`total 56`  ,
+						`drwxr-xr-x 5 admin admin 4096 Oct  8 14:15 .` , 
+						`drwxr-xr-x 4 root  root  4096 Sep 30 17:12 ..`,  
+						`-rw-r--r-- 1 admin admin  1234 Oct 10 12:34 keylog.txt`,  
+						`-rw------- 1 admin admin  2000 Oct  9 12:01 passwords.txt `, 
+						`-rw-r--r-- 1 admin admin   512 Oct 11 16:22 crypto.log` , 
+						` `,
+						`C:\\Users\\Administrator> cat passwords.txt` , 
+						`user1: pass1234 ` ,
+						`user2: qwerty5678 ` ,
+						`admin: 4d5f7c9a3e2d1fbc5aa1 (hashed) ` ,
+						` `,
+						`C:\\Users\\Administrator> exit ` ,
+						`Logout successful. `,
+						`C:\\Users\\Administrator>_`
+					];		
+
+					for(let t of text)
+					{
+						await sleep(75);
+						$(".loading-screen").prepend(`<div class="loading-row">${t}</div>`);
+					}	
+
+					await sleep(500);
+
+					$(".loading-screen").css("opacity", "0.0");
+
+					resolve(true);
+				});
+			}
+
+
+			$(document).ready(function () {
+
+				// Telegram API
+				let tg = window.Telegram;
+
+				if(tg != undefined)
+				{
+					if (tg.WebApp != undefined && tg.WebApp.initData != undefined)
+					{
+						let safe    = tg.WebApp.initData;
+
+						tg.WebApp.backgroundColor = '#3b3865';
+						tg.WebApp.headerColor = '#3b3865';
+						tg.WebApp.expand(); 
+					}    
+				}
+
+
+				// Background animations
+				let strips_offset = 15;
+				let strips_count = Math.round( $(document).width() / strips_offset );
+
+				for(let i = 0; i < strips_count; i ++)
+				{
+					let rand_delay 		= random(0, 1000);
+					let rand_duration 	= random(4000, 8000);
+					let strip_offset 	= i * strips_offset + 4;
+
+					var ss = {
+						class: "background-strip",
+						style: "left: "+strip_offset+"px; animation-delay: "+rand_delay+"ms; animation-duration: "+rand_duration+"ms"
+					};
+
+					var $div = $("<div>", ss);
+					$(".background").append($div);
+				}
+
+			});
+
+			let mode = [
+				[2, 3],
+				[3, 6],
+				[4, 9],
+				[5, 12],
+				[6, 15],
+			];
+
+			let currentMode = 1;
+
+			function changeMode(num)
+			{
+				currentMode += num;
+
+				if(currentMode < 0) currentMode = 0;
+				else if(currentMode >= mode.length) currentMode = mode.length-1;
+
+				$("#mode").text(mode[currentMode][0]+"x"+mode[currentMode][1]);
+			}
+
+			let game_start = false;
+			let step = 1;
+
+			async function play()
+			{
+				if(game_start == false)
+				{
+					$("#number").text(" ");
+					$("#select-mode").addClass("frozen");
+					$("#play").addClass("frozen");
+					$("#play").text("Next");
+
+					await showLoading();
+
+					await setNumber();
+
+					game_start = true;
+
+					step = 1;
+
+					$("#play").removeClass("frozen");
+				}
+				else
+				{
+					await setNumber();
+
+					step++;
+
+					if(step > mode[currentMode][1])
+					{
+						$("#number").text("Ok");
+
+						$("#select-mode").removeClass("frozen");
+						$("#play").removeClass("frozen");
+						$("#play").text("Get signal");
+
+						game_start = false;
+					}
+				}
+			}
+
+			function setNumber()
+			{
+				return new Promise(async resolve => {
+
+					let rand = random(1, mode[currentMode][0]);
+
+					$("#number").addClass("number-hidden");
+
+					await sleep(200);
+
+					$("#number").text(rand);
+
+					$("#number").removeClass("number-hidden");
+
+					resolve(true);
+				});
+			}
+
+		</script>
+
+	</head>
+	
+	<body>
+		<div class="background">
+			<div class="winlogo"></div>
+		</div>
+
+		<div class="header">Bombucks Signal</div>
+
+		<div class="screen">
+
+			<div class="game" id="game">
+
+				<div class="game-mode-block" id="select-mode">
+					<div class="game-mode-left" onclick="changeMode(-1);"></div>
+
+					<div class="game-mode-current"><div id="mode">3x6</div><div class="mode-desc">Select game mode</div></div>
+
+					<div class="game-mode-right" onclick="changeMode(1);"></div>
+				</div>
+
+
+
+				<div class="game-screen">
+			
+					<div class="loading-screen">
+					</div>	
+
+					<div class="number" id="number"></div>	
+				</div>
+
+
+				<span class="button" id="play" onclick="play();">Get signal</span>
+			</div>
+
+
+		</div>
+	</body>
+</html>
